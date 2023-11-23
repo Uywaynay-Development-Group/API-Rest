@@ -1,10 +1,11 @@
+const jwt = require('jsonwebtoken');
 const express = require('express');
 const app = express();
 const cors = require('cors');
 const port = 3000;
 
 const {sequelize} = require('./connection');
-const {Vaccine, User} = require('./models');
+const {Vaccine, User, Pet} = require('./models');
 
 app.use(express.json());
 
@@ -70,7 +71,9 @@ app.post('/users/login', async (req, res) => {
     });
         
     if(users == null){}else{
-        return res.json({users});
+        const id = users.id;
+        const token = jwt.sign({id}, "arribaLosTiuan", {expiresIn: 300});
+        return res.json({auth: true, token, users});
     }
 
 });
@@ -162,6 +165,87 @@ app.put("/vaccines/:vaccineId", async (req, res) => {
     }catch(error){
         console.log("Error", error);
         return res.status(500).json({message: 'Error interno de servidor'});
+    }
+});
+
+// Endpoint pets
+
+app.get("/pets", async (req, res) => {
+    try{
+        const pets = await Pet.findAll();
+        return res.json({pets});
+    }catch(error){
+        console.log("Error", error);
+        return res.status(500).json({message: 'Error interno de servidor'});
+    }
+});
+
+app.post('/pets', async (req, res) => {
+    try {
+        const name = req.body?.name;
+        const type = req.body?.type;
+        const breed = req.body?.breed;
+        const age = req.body?.age;
+
+        if(!name || !type || !breed || !age){
+            return res
+                .status(400)
+                .json({message: 'Datos incompletos'});
+        }
+
+        const savePet = await Pet.create({
+            name, type, breed, age
+        });
+        return res
+            .status(201)
+            .json({Pet:savePet});
+
+    } catch(error){
+        return res
+            .status(500)
+            .json({message: 'Error interno de servidor'});
+    }
+});
+
+app.delete("/pets/:petId", async (req, res) => {
+    try {
+        const petId = req.params.petId;
+        const pet = await Pet.findByPk(petId);
+        if(!pet){
+            return res.status(404).json({message: 'Mascota no encontrada'});
+        }
+        await pet.destroy();
+        return res.json({ message: "Mascota eliminada correctamente" });
+    } catch(error){
+        return res
+            .status(500)
+            .json({message: 'Error interno de servidor'});
+    }
+});
+
+app.put("/pets/:petId", async (req, res) => {
+    try {
+        const petId = req.params.petId;
+        const { name, type, breed, age } = req.body;
+        if(!name || !type || !breed || !age){
+            return res.status(400).json({message: 'Datos incompletos'});
+        }
+        const pet = await Pet.findByPk(petId);
+        if(!pet){
+            return res.status(404).json({message: 'Mascota no encontrada'});
+        }
+
+        pet.name = name;
+        pet.type = type;
+        pet.breed = breed;
+        pet.age = age;
+        await pet.save();
+
+        return res.json({ pet });
+    } catch(error){
+        return res
+            .status(500)
+            .json({message: 'Error interno de servidor'});
     }
 });
 

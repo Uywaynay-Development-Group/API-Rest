@@ -47,7 +47,44 @@ const Vaccine = sequelize.define('Vaccine', {
 
 }, {tableName: 'vaccines'});
 
+const Pet = sequelize.define('Pet', {
+    name: {
+        type:DataTypes.STRING,
+        allowNull: false
+    },
+
+    type: {
+        type:DataTypes.STRING,
+        allowNull: false
+    },
+
+    breed: {
+        type:DataTypes.STRING,
+        allowNull: false
+    },
+
+    age: {
+        type:DataTypes.INTEGER,
+        allowNull: false
+    },
+
+}, {tableName: 'pets'});
+
+// User ----< Pet
+
+User.hasMany(Pet, {as: "pets", foreignKey: "userId"});
+Pet.belongsTo(User, {
+    foreignKey: "userId"
+});
+
+// Pet ----< Vaccine
+Pet.hasMany(Vaccine, {as: "vaccines", foreignKey: "petId"});
+Vaccine.belongsTo(Pet, {
+    foreignKey: "petId"
+});
+
 module.exports = {
     Vaccine,
-    User
+    User,
+    Pet
 };
