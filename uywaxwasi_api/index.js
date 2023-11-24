@@ -57,6 +57,20 @@ app.get('/users', async (req, res) => {
     }
 });
 
+app.get('/users/:userId', async (req, res) => {
+    try{
+        const userId = req.params.userId;
+        const user = await User.findByPk(userId);
+        if(!user){
+            return res.status(404).json({message: 'Usuario no encontrado'});
+        }
+        return res.json({ user });
+    }catch(error){
+        console.log("Error", error);
+        return res.status(500).json({message: 'Error interno de servidor'});
+    }
+});
+
 app.post('/users/login', async (req, res) => {
  
     const { email, password } = req.body;
@@ -84,15 +98,17 @@ app.post('/vaccines', async (req, res) => {
     try {
         const name = req.body?.name;
         const pet_name = req.body?.pet_name;
+        const pet = req.body?.petId;
+        const user = req.body?.userId;
 
-        if(!name || ! pet_name){
+        if(!name || ! pet_name || !pet || !user){
             return res
                 .status(400)
                 .json({message: 'Datos incompletos'});
         }
 
         const saveVaccine = await Vaccine.create({
-            name, pet_name
+            name, pet_name, petId: pet, userId: user
         });
 
         return res
@@ -106,9 +122,13 @@ app.post('/vaccines', async (req, res) => {
     }
 });
 
-app.get('/vaccines', async (req, res) => {
+app.get('/vaccines/:userId', async (req, res) => {
     try{
-        const vaccines = await Vaccine.findAll();
+        const vaccines = await Vaccine.findAll({
+            where: {
+                userId: req.params.userId
+            }
+        });
         return res.json({vaccines});
     }catch(error){
         console.log("Error", error);
@@ -116,7 +136,7 @@ app.get('/vaccines', async (req, res) => {
     }
 });
 
-app.get('/vaccines/:vaccineId', async (req, res) => {
+app.get('/vaccine/:vaccineId', async (req, res) => {
     try{
         const vaccineId = req.params.vaccineId;
         const vaccine = await Vaccine.findByPk(vaccineId);
@@ -170,10 +190,26 @@ app.put("/vaccines/:vaccineId", async (req, res) => {
 
 // Endpoint pets
 
-app.get("/pets", async (req, res) => {
+app.get("/pets/:userId", async (req, res) => {
     try{
-        const pets = await Pet.findAll();
+        const user = req.params.userId;
+        const pets = await Pet.findAll({
+            where: {
+                userId: user
+            }
+        });
         return res.json({pets});
+    }catch(error){
+        console.log("Error", error);
+        return res.status(500).json({message: 'Error interno de servidor'});
+    }
+});
+
+app.get("/pet/:petId", async (req, res) => {
+    try{
+        const id = req.params.petId;
+        const pet = await Pet.findByPk(id);
+        return res.json({pet});
     }catch(error){
         console.log("Error", error);
         return res.status(500).json({message: 'Error interno de servidor'});
@@ -186,15 +222,23 @@ app.post('/pets', async (req, res) => {
         const type = req.body?.type;
         const breed = req.body?.breed;
         const age = req.body?.age;
+        const user = req.body?.user;
+        const url = req.body?.url;
 
-        if(!name || !type || !breed || !age){
+        
+        if(!name || !type || !breed || !age || !user){
             return res
                 .status(400)
                 .json({message: 'Datos incompletos'});
         }
 
         const savePet = await Pet.create({
-            name, type, breed, age
+            name, 
+            type, 
+            breed, 
+            age,
+            icon_url: url, 
+            userId: user,
         });
         return res
             .status(201)

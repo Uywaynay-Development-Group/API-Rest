@@ -68,6 +68,10 @@ const Pet = sequelize.define('Pet', {
         allowNull: false
     },
 
+    icon_url: {
+        type:DataTypes.STRING
+    },
+
 }, {tableName: 'pets'});
 
 // User ----< Pet
@@ -81,6 +85,12 @@ Pet.belongsTo(User, {
 Pet.hasMany(Vaccine, {as: "vaccines", foreignKey: "petId"});
 Vaccine.belongsTo(Pet, {
     foreignKey: "petId"
+});
+
+// User ----< Vaccine
+User.hasMany(Vaccine, {as: "vaccines", foreignKey: "userId"});
+Vaccine.belongsTo(User, {
+    foreignKey: "userId"
 });
 
 module.exports = {
