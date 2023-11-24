@@ -5,7 +5,7 @@ const cors = require('cors');
 const port = 3000;
 
 const {sequelize} = require('./connection');
-const {Vaccine, User, Pet} = require('./models');
+const {Vaccine, User, Pet, Activity} = require('./models');
 
 app.use(express.json());
 
@@ -286,6 +286,107 @@ app.put("/pets/:petId", async (req, res) => {
         await pet.save();
 
         return res.json({ pet });
+    } catch(error){
+        return res
+            .status(500)
+            .json({message: 'Error interno de servidor'});
+    }
+});
+
+// Endpoint activities
+
+app.get("/activities/:userId", async (req, res) => {
+    try {
+        const user = req.params.userId;
+        const activities = await Activity.findAll({
+            where: {
+                userId: user
+            }
+        });
+        return res.json({activities});
+    } catch(error){
+        return res
+            .status(500)
+            .json({message: 'Error interno de servidor'});
+    }
+});
+
+app.get("/activity/:activityId", async (req, res) => {
+    try {
+        const id = req.params.activityId;
+        const activity = await Activity.findByPk(id);
+        return res.json({activity});
+    } catch(error){
+        return res
+            .status(500)
+            .json({message: 'Error interno de servidor'});
+    }
+});
+
+app.post("/activities", async (req, res) => {
+    try {
+        const content = req.body?.content;
+        const start = req.body?.start;
+        const end = req.body?.end;
+        const user = req.body?.user;
+
+        if(!content || !start || !end || !user){
+            return res
+                .status(400)
+                .json({message: 'Datos incompletos'});
+        }
+
+        const saveActivity = await Activity.create({
+            content, 
+            start, 
+            end,
+            userId: user,
+        });
+
+        return res
+            .status(201)
+            .json({Activity:saveActivity});
+    } catch(error){
+        return res
+            .status(500)
+            .json({message: 'Error interno de servidor'});
+    }
+});
+
+app.delete("/activities/:activityId", async (req, res) => {
+    try {
+        const activityId = req.params.activityId;
+        const activity = await Activity.findByPk(activityId);
+        if(!activity){
+            return res.status(404).json({message: 'Actividad no encontrada'});
+        }
+        await activity.destroy();
+        return res.json({ message: "Actividad eliminada correctamente" });
+    } catch(error){
+        return res
+            .status(500)
+            .json({message: 'Error interno de servidor'});
+    }
+});
+
+app.put("/activities/:activityId", async (req, res) => {
+    try {
+        const activityId = req.params.activityId;
+        const { content, start, end } = req.body;
+        if(!content || !start || !end){
+            return res.status(400).json({message: 'Datos incompletos'});
+        }
+        const activity = await Activity.findByPk(activityId);
+        if(!activity){
+            return res.status(404).json({message: 'Actividad no encontrada'});
+        }
+
+        activity.content = content;
+        activity.start = start;
+        activity.end = end;
+        await activity.save();
+
+        return res.json({ activity });
     } catch(error){
         return res
             .status(500)

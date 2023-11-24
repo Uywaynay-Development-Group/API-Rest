@@ -74,6 +74,21 @@ const Pet = sequelize.define('Pet', {
 
 }, {tableName: 'pets'});
 
+const Activity = sequelize.define('Activity', {
+    content: {
+        type:DataTypes.STRING,
+        allowNull: false
+    },
+    start: {
+        type:DataTypes.DATE,
+        allowNull: false
+    },
+    end: {
+        type:DataTypes.DATE,
+        allowNull: false
+    },
+}, {tableName: 'activities'});
+
 // User ----< Pet
 
 User.hasMany(Pet, {as: "pets", foreignKey: "userId"});
@@ -93,8 +108,15 @@ Vaccine.belongsTo(User, {
     foreignKey: "userId"
 });
 
+// User ----< Activity
+User.hasMany(Activity, {as: "activities", foreignKey: "userId"});
+Activity.belongsTo(User, {
+    foreignKey: "userId"
+});
+
 module.exports = {
     Vaccine,
     User,
-    Pet
+    Pet,
+    Activity
 };
